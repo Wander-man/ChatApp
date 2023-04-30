@@ -22,7 +22,7 @@
             <ListView/>
         </DockPanel>
 
-        <!-- Messages -->
+        <!-- Messages s -->
         <StackPanel Grid.Column="1">
             <ListView Height="380"/>
 
