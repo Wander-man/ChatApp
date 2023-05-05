@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="MVVM\VievModel\" />
     <Folder Include="MVVM\Model\" />
   </ItemGroup>
 
