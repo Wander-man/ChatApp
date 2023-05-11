@@ -8,8 +8,9 @@
         mc:Ignorable="d"
         
         Title="MainWindow"
-        Height="450"
-        Width="800">
+        Height="474"
+        Width="816"
+        ResizeMode="NoResize">
 
 
     <Window.DataContext>
@@ -32,7 +33,13 @@
                     DockPanel.Dock="Top"
                     Content="Connect"
                     Command="{Binding ConnectToServerCommand}"/>
-            <ListView/>
+            <ListView ItemsSource="{Binding Users}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Username}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </DockPanel>
 
         <!-- Messages -->
