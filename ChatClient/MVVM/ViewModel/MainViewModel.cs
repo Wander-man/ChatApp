@@ -12,8 +12,8 @@ namespace ChatClient.MVVM.ViewModel
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public ObservableCollection<UserModel> Users { get; set; }
-        public ObservableCollection<string> Messages { get; set; }
+        public ObservableCollection<ContactModel> Users { get; set; }
+        public ObservableCollection<MessageModel> Messages { get; set; }
 
         public RelayCommand ConnectToServerCommand { get; set; }
         public RelayCommand SendMessageCommand { get; set; }
@@ -40,8 +40,8 @@ namespace ChatClient.MVVM.ViewModel
 
         public MainViewModel()
         {
-            Users = new ObservableCollection<UserModel>();
-            Messages = new ObservableCollection<string>();
+            Users = new ObservableCollection<ContactModel>();
+            Messages = new ObservableCollection<MessageModel>();
 
             _server = new Server();
             _server.connectedEvent += UserConnected;
