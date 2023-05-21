@@ -66,21 +66,35 @@ namespace ChatClient.MVVM.ViewModel
 
         private void MessageReceived()
         {
+            // TODO: still accepts string messages
             var msg = _server.PacketReader.ReadMessage();
-            Application.Current.Dispatcher.Invoke(() => Messages.Add(msg));
+            Application.Current.Dispatcher.Invoke(() => Messages.Add(
+                new MessageModel
+                {
+                    Username = "someone",
+                    Message = msg,
+                }));
         }
 
         private void UserConnected()
         {
-            var user = new UserModel
-            {
-                Username = _server.PacketReader.ReadMessage(),
-                UID = _server.PacketReader.ReadMessage(),
-            };
+            //var user = new ContactModel
+            //{
+            //    Username = _server.PacketReader.ReadMessage(),
+            //    UID = _server.PacketReader.ReadMessage(),
+            //};
 
-            if(!Users.Any(x => x.UID == user.UID))
+            string username = _server.PacketReader.ReadMessage();
+            string uid = _server.PacketReader.ReadMessage();
+
+            if(!Users.Any(x => x.UID == uid))
             {
-                Application.Current.Dispatcher.Invoke(() => Users.Add(user));
+                Application.Current.Dispatcher.Invoke(() => Users.Add(
+                    new ContactModel
+                    {
+                        Username = username,
+                        UID = uid,
+                    }));
             }
         }
 

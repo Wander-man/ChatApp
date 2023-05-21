@@ -44,8 +44,14 @@
 
         <!-- Messages -->
         <StackPanel Grid.Column="1">
-            <ListView Height="380"
-                      ItemsSource="{Binding Messages}"/>
+            <ListView Height="380" ItemsSource="{Binding Messages}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Message}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+                
 
             <StackPanel Orientation="Horizontal">
                 <TextBox Name="messageBox" 
