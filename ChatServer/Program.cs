@@ -1,7 +1,9 @@
 ﻿using ChatServer.Net.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
 
 namespace ChatServer
 {
@@ -18,9 +20,10 @@ namespace ChatServer
         static TcpListener _listener;
         private static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.ProcessExit += new EventHandler(SaveHistory);
             _messageHistory = new List<MessageModel>();
-            //LoadHistory();
-            //SendHistoryOut();
+            LoadHistory();
+            
 
             _users = new List<Client>();
             _listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 7891);
@@ -65,14 +68,36 @@ namespace ChatServer
             _messageHistory.Sort((a,b) => DateTime.Parse(a.Time).CompareTo(DateTime.Parse(b.Time)));
         }
 
-        static void SaveHistory()
+        static void SaveHistory(object? sender, EventArgs? e)
         {
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream("../../../Logs/MessageHistoryLog.txt", FileMode.OpenOrCreate, FileAccess.Write);
 
+            foreach (var message in _messageHistory)
+            {
+                formatter.Serialize(stream, message);
+            }
+            stream.Close();
         }
 
         static void LoadHistory()
         {
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream("../../../Logs/MessageHistoryLog.txt", FileMode.OpenOrCreate, FileAccess.Read);
+            
+            while(true)
+            {
+                try
+                {
+                    MessageModel message = (MessageModel)formatter.Deserialize(stream);
+                    AddToHistory(message);
+                } catch (SerializationException e)
+                {
+                    break;
+                }
+            }
 
+            stream.Close();
         }
 
         static void UpdateUserOnHistory(string username)
