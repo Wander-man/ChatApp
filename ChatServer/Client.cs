@@ -18,7 +18,7 @@ namespace ChatServer
             ClientSocket = client;
             UID = Guid.NewGuid();
             _packetReader = new PacketReader(ClientSocket.GetStream());
-
+            
             var opcode = _packetReader.ReadByte();
             Username = _packetReader.ReadMessage();
 
@@ -39,7 +39,8 @@ namespace ChatServer
                         case 10:
                             var msg = _packetReader.ReadMessage();
                             Console.WriteLine($"[{DateTime.Now}]: Message received! {msg}");
-                            Program.BroadcastMessage($"[{DateTime.Now}]: [{Username}]: {msg}");
+                            //Program.BroadcastMessage($"[{DateTime.Now}]: [{Username}]: {msg}");
+                            Program.BroadcastMessage(Username, msg, DateTime.Now.ToString());
                             break;
                         default:
                             break;

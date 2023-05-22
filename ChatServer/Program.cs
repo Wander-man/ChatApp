@@ -24,8 +24,16 @@ namespace ChatServer
             while(true)
             {
                 Client client = new Client(_listener.AcceptTcpClient());
-                _users.Add(client);
-                BroadcastConnection();
+                if(_users.Any(x => x.Username == client.Username))
+                {
+                    continue;
+                } 
+                else
+                {
+                    _users.Add(client);
+                    BroadcastConnection();
+                }
+                
             }
 
                         
@@ -56,6 +64,20 @@ namespace ChatServer
             var msgPacket = new PacketBuilder();
             msgPacket.WriteOpCode(10);
             msgPacket.WriteMessage(message);
+
+            foreach (var user in _users)
+            {
+                user.ClientSocket.Client.Send(msgPacket.GetPacketBytes());
+            }
+        }
+
+        public static void BroadcastMessage(string username, string message, string date)
+        {
+            var msgPacket = new PacketBuilder();
+            msgPacket.WriteOpCode(10);
+            msgPacket.WriteMessage(username);
+            msgPacket.WriteMessage(message);
+            msgPacket.WriteMessage(date);
 
             foreach (var user in _users)
             {

@@ -24,19 +24,29 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <!-- User connection and user list -->
+        <!-- User connection and user list Command="{Binding ConnectToServerCommand}-->
         <DockPanel>
-            <TextBox Height="25"
+            <TextBox x:Name="username_text" 
+                     Height="25"
                      DockPanel.Dock="Top"
+                     TextChanged="username_text_TextChanged"                     
                      Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
-            <Button Height="25"
+            <Button x:Name="connect_button"
+                    IsEnabled="False"
+                    Height="25"
                     DockPanel.Dock="Top"
                     Content="Connect"
+                    Click="Connect_Click"
                     Command="{Binding ConnectToServerCommand}"/>
-            <ListView ItemsSource="{Binding Users}">
+            <ListView ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedContact}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Username}"/>
+                        <StackPanel Width="auto">
+                            <TextBlock Text="{Binding Username}"/>
+                            <TextBlock Text="{Binding LastMessage}" 
+                                       Margin="10,0,0,0"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>                        
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -44,22 +54,25 @@
 
         <!-- Messages -->
         <StackPanel Grid.Column="1">
-            <ListView Height="380" ItemsSource="{Binding Messages}">
+            <ListView Height="380" ItemsSource="{Binding SelectedContact.Messages}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Message}"/>
+                        <TextBlock Text="{Binding MessagePrint}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
                 
 
             <StackPanel Orientation="Horizontal">
-                <TextBox Name="messageBox" 
-                        Height="55"
-                        Width="545"
-                        VerticalContentAlignment="Center"
-                        Text="{Binding Path=Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <Button Width="55"
+                <TextBox x:Name="messageBox" 
+                         IsEnabled="False"
+                         Height="55"
+                         Width="545"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding Path=Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button x:Name="send_button" 
+                        IsEnabled="False"
+                        Width="55"
                         Content="Send"
                         Command="{Binding SendMessageCommand}"/>
             </StackPanel>

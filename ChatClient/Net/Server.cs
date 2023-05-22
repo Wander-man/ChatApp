@@ -13,6 +13,7 @@ namespace ChatClient.Net
         public event Action connectedEvent;
         public event Action msgReceivedEvent;
         public event Action userDisconnectedEvent;
+        public event Action persMsgReceivedEvent;
 
         public Server()
         {
@@ -60,6 +61,10 @@ namespace ChatClient.Net
 
                         case 10:
                             msgReceivedEvent?.Invoke();
+                            break;
+
+                        case 11: 
+                            persMsgReceivedEvent?.Invoke();
                             break;
 
                         default:

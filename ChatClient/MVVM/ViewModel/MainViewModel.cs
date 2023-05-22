@@ -1,17 +1,18 @@
 ﻿using ChatClient.MVVM.Core;
 using ChatClient.MVVM.Model;
 using ChatClient.Net;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Policy;
 using System.Windows;
 
 namespace ChatClient.MVVM.ViewModel
 {
-    class MainViewModel : INotifyPropertyChanged
+    class MainViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public ObservableCollection<ContactModel> Users { get; set; }
         public ObservableCollection<MessageModel> Messages { get; set; }
 
@@ -19,20 +20,29 @@ namespace ChatClient.MVVM.ViewModel
         public RelayCommand SendMessageCommand { get; set; }
 
         public string Username { get; set; }
-        private string message;
+        private string _message;
         public string Message
         {
             get
-            {
-                return message;
-            }
+            { return _message; }
             set
             {
-                if (message == value)
+                if (_message == value)
                     return;
 
-                message = value;
-                OnPropertyChanged("Message");
+                _message = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private ContactModel _selectedContact;
+
+        public ContactModel SelectedContact
+        {
+            get { return _selectedContact; }
+            set { 
+                _selectedContact = value;
+                OnPropertyChanged();
             }
         }
 
@@ -40,13 +50,19 @@ namespace ChatClient.MVVM.ViewModel
 
         public MainViewModel()
         {
-            Users = new ObservableCollection<ContactModel>();
+            Users = new ObservableCollection<ContactModel>
+            {
+                new ContactModel("All Chat", "0")
+            };
+            SelectedContact = Users.First();
+
             Messages = new ObservableCollection<MessageModel>();
 
             _server = new Server();
             _server.connectedEvent += UserConnected;
             _server.msgReceivedEvent += MessageReceived;
             _server.userDisconnectedEvent += RemoveUser;
+            _server.persMsgReceivedEvent += PersonalMessageReceived;
 
             ConnectToServerCommand = new RelayCommand(o => _server.ConnectToServer(Username), o => !string.IsNullOrEmpty(Username));
             SendMessageCommand = new RelayCommand(o =>
@@ -56,6 +72,7 @@ namespace ChatClient.MVVM.ViewModel
             }
             , o => !string.IsNullOrEmpty(Message));
         }
+
 
         private void RemoveUser()
         {
@@ -67,13 +84,29 @@ namespace ChatClient.MVVM.ViewModel
         private void MessageReceived()
         {
             // TODO: still accepts string messages
-            var msg = _server.PacketReader.ReadMessage();
-            Application.Current.Dispatcher.Invoke(() => Messages.Add(
-                new MessageModel
-                {
-                    Username = "someone",
-                    Message = msg,
-                }));
+            var sender = _server.PacketReader.ReadMessage();
+            var message = _server.PacketReader.ReadMessage();
+            var date = _server.PacketReader.ReadMessage();
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Users.First().Messages.Add(
+                    new MessageModel
+                    {
+                        Username = sender,
+                        Message = message,
+                        Time = DateTime.Parse(date)
+                    });
+                Users.First().UpdateLastMessage();
+            });
+            
+
+        }
+
+        private void PersonalMessageReceived()
+        {
+            // doing the sending now to know
+            var msg = _server.PacketReader.ReadMessage;
         }
 
         private void UserConnected()
@@ -89,21 +122,7 @@ namespace ChatClient.MVVM.ViewModel
 
             if(!Users.Any(x => x.UID == uid))
             {
-                Application.Current.Dispatcher.Invoke(() => Users.Add(
-                    new ContactModel
-                    {
-                        Username = username,
-                        UID = uid,
-                    }));
-            }
-        }
-
-        
-        protected void OnPropertyChanged(string pName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(pName));
+                Application.Current.Dispatcher.Invoke(() => Users.Add(new ContactModel(username, uid)));
             }
         }
     }
