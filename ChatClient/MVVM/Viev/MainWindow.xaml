@@ -72,6 +72,7 @@
                          Text="{Binding Path=Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <Button x:Name="send_button" 
                         IsEnabled="False"
+                        IsDefault="True"
                         Width="55"
                         Content="Send"
                         Command="{Binding SendMessageCommand}"/>

@@ -11,7 +11,7 @@ namespace ChatClient.MVVM.Model
     class ContactModel : ObservableObject
     {
         public string Username { get; set; }
-        public string UID { get; set; }
+        public string? UID { get; set; }
         private string lastMessage;
         public string LastMessage { 
             get
@@ -45,7 +45,7 @@ namespace ChatClient.MVVM.Model
             LastMessage = last.Username + ": " + last.Message;
         }
 
-        public ContactModel (string username, string uid)
+        public ContactModel (string username, string uid = "")
         {
             Messages = new System.Collections.ObjectModel.ObservableCollection<MessageModel>();
             Username = username;

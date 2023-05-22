@@ -63,27 +63,30 @@ namespace ChatClient.MVVM.ViewModel
             _server.msgReceivedEvent += MessageReceived;
             _server.userDisconnectedEvent += RemoveUser;
             _server.persMsgReceivedEvent += PersonalMessageReceived;
+            _server.ownMessageConfirmedEvent += ownMessageConfirmedEvent;
 
             ConnectToServerCommand = new RelayCommand(o => _server.ConnectToServer(Username), o => !string.IsNullOrEmpty(Username));
             SendMessageCommand = new RelayCommand(o =>
             {
-                _server.SendMessageToServer(Message);
+                byte opcode = (byte)(SelectedContact.Username == "All Chat" ? 10 : 11);
+
+                _server.SendMessageToServer(opcode, Username, SelectedContact.Username, Message);
                 Message = "";
             }
             , o => !string.IsNullOrEmpty(Message));
         }
 
 
+
         private void RemoveUser()
         {
             var uid = _server.PacketReader.ReadMessage();
             var user = Users.Where(x => x.UID.ToString() == uid).FirstOrDefault();
-            Application.Current.Dispatcher.Invoke(() => Users.Remove(user));
+            //Application.Current.Dispatcher.Invoke(() => Users.Remove(user));
         }
 
         private void MessageReceived()
         {
-            // TODO: still accepts string messages
             var sender = _server.PacketReader.ReadMessage();
             var message = _server.PacketReader.ReadMessage();
             var date = _server.PacketReader.ReadMessage();
@@ -98,15 +101,57 @@ namespace ChatClient.MVVM.ViewModel
                         Time = DateTime.Parse(date)
                     });
                 Users.First().UpdateLastMessage();
-            });
-            
+            });      
+        }
 
+        private void ownMessageConfirmedEvent()
+        {
+            var receiver = _server.PacketReader.ReadMessage();
+            var message = _server.PacketReader.ReadMessage();
+            var date = _server.PacketReader.ReadMessage();
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var recip = Users.Where(x => x.Username == receiver).FirstOrDefault();
+                if (recip == null)
+                {
+                    Users.Add(new ContactModel(receiver));
+                    recip = Users.First(x => x.Username == receiver);
+                }
+                recip.Messages.Add(
+                    new MessageModel
+                    {
+                        Username = Username,
+                        Message = message,
+                        Time = DateTime.Parse(date)
+                    });
+                recip.UpdateLastMessage();
+            });
         }
 
         private void PersonalMessageReceived()
         {
-            // doing the sending now to know
-            var msg = _server.PacketReader.ReadMessage;
+            var sender = _server.PacketReader.ReadMessage();
+            var message = _server.PacketReader.ReadMessage();
+            var date = _server.PacketReader.ReadMessage();
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var author = Users.Where(x => x.Username == sender).FirstOrDefault();
+                if (author == null)
+                {
+                    Users.Add(new ContactModel(sender));
+                    author = Users.First(x => x.Username == sender);
+                }
+                author.Messages.Add(
+                    new MessageModel
+                    {
+                        Username = sender,
+                        Message = message,
+                        Time = DateTime.Parse(date)
+                    });
+                author.UpdateLastMessage();
+            });
         }
 
         private void UserConnected()
@@ -120,9 +165,17 @@ namespace ChatClient.MVVM.ViewModel
             string username = _server.PacketReader.ReadMessage();
             string uid = _server.PacketReader.ReadMessage();
 
+            if(Users.Any(x => x.Username == username))
+            {
+                Application.Current.Dispatcher.Invoke(() => 
+                    Users.First(x => x.Username == username).UID = uid
+                );
+            }
             if(!Users.Any(x => x.UID == uid))
             {
-                Application.Current.Dispatcher.Invoke(() => Users.Add(new ContactModel(username, uid)));
+                Application.Current.Dispatcher.Invoke(() => 
+                    Users.Add(new ContactModel(username, uid))
+                );
             }
         }
     }

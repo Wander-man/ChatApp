@@ -1,5 +1,6 @@
 ﻿using ChatClient.Net.IO;
 using System;
+using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -14,6 +15,7 @@ namespace ChatClient.Net
         public event Action msgReceivedEvent;
         public event Action userDisconnectedEvent;
         public event Action persMsgReceivedEvent;
+        public event Action ownMessageConfirmedEvent;
 
         public Server()
         {
@@ -36,9 +38,6 @@ namespace ChatClient.Net
                 }
 
                 ReadPackets();
-
-
-
             }
         }
 
@@ -48,38 +47,52 @@ namespace ChatClient.Net
             {
                 while (true)
                 {
-                    var opcode = PacketReader.ReadByte();
-                    switch (opcode)
+                    try
                     {
-                        case 1:
-                            connectedEvent?.Invoke();
-                            break;
+                        var opcode = PacketReader.ReadByte();
+                        switch (opcode)
+                        {
+                            case 1:
+                                connectedEvent?.Invoke();
+                                break;
 
-                        case 5:
-                            userDisconnectedEvent?.Invoke();
-                            break;
+                            case 5:
+                                userDisconnectedEvent?.Invoke();
+                                break;
 
-                        case 10:
-                            msgReceivedEvent?.Invoke();
-                            break;
+                            case 10:
+                                msgReceivedEvent?.Invoke();
+                                break;
 
-                        case 11: 
-                            persMsgReceivedEvent?.Invoke();
-                            break;
+                            case 11: 
+                                persMsgReceivedEvent?.Invoke();
+                                break;
 
-                        default:
-                            Console.WriteLine("Default, idk what to do");
-                            break;
+                            case 12:
+                                ownMessageConfirmedEvent?.Invoke();
+                                break;
 
+                            default:
+                                Console.WriteLine("Default, idk what to do");
+                                break;
+
+                        }         
+                    } catch (System.IO.EndOfStreamException e)
+                    {
+                        _client.Dispose();
+                        _client = new TcpClient();
+                        continue;
                     }
+                    
                 }
             });
         }
 
-        public void SendMessageToServer(string message)
+        public void SendMessageToServer(byte opcode, string sender, string receiver, string message)
         {
             var messagePacket = new PacketBuilder();
-            messagePacket.WriteOpCode(10);
+            messagePacket.WriteOpCode(opcode);
+            messagePacket.WriteMessage(receiver);
             messagePacket.WriteMessage(message);
             _client.Client.Send(messagePacket.GetPacketBytes());
         }
